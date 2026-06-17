@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>トレーニングログ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #0d1b2a;
+      letter-spacing: 0.04em;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      margin: 20px 0 10px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .field { margin-bottom: 14px; }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    label span.req { color: #e74c3c; margin-left: 3px; }
+
+    input[type="date"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #dde1e7;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #3a86ff;
+      background: #fff;
+    }
+
+    /* 種目テーブル */
+    .exercise-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .exercise-table thead th {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #888;
+      text-align: center;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #eee;
+    }
+    .exercise-table thead th:first-child { text-align: left; }
+
+    .exercise-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+    .exercise-table tbody tr:last-child { border-bottom: none; }
+
+    .exercise-table td { padding: 5px 3px; vertical-align: middle; }
+    .exercise-table td:first-child { width: 40%; }
+    .exercise-table td.num-cell { width: 16%; }
+    .exercise-table td.del-cell { width: 32px; text-align: center; }
+
+    .ex-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fafafa;
+      color: #1a1a2e;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .ex-input:focus {
+      outline: none;
+      border-color: #3a86ff;
+      background: #fff;
+    }
+    input[type="number"].ex-input {
+      text-align: center;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+    /* Chrome の数値スピナーを非表示 */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #ccc;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+    .btn-del:hover { color: #e74c3c; }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      background: none;
+      border: 1.5px dashed #3a86ff;
+      border-radius: 8px;
+      color: #3a86ff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-add:hover { background: #eff6ff; }
+    .btn-add:disabled { border-color: #ccc; color: #ccc; cursor: default; background: none; }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      background: #3a86ff;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 24px;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-submit:active { transform: scale(0.98); background: #2563eb; }
+
+    #status-msg {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      min-height: 1.4em;
+    }
+    #status-msg.success { color: #27ae60; }
+    #status-msg.error   { color: #e74c3c; }
+    #status-msg.sending { color: #888; }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #e6edf3; }
+      .card { background: #161b22; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+      h1 { color: #e6edf3; }
+      label { color: #c9d1d9; }
+      input[type="date"], input[type="text"], textarea,
+      .ex-input {
+        background: #0d1117;
+        border-color: #30363d;
+        color: #e6edf3;
+      }
+      input:focus, textarea:focus, .ex-input:focus {
+        border-color: #3a86ff;
+        background: #161b22;
+      }
+      .exercise-table thead th { color: #666; border-bottom-color: #30363d; }
+      .exercise-table tbody tr { border-bottom-color: #21262d; }
+      .btn-add { border-color: #3a86ff; color: #3a86ff; }
+      .btn-add:hover { background: #0d1b2e; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>🏋️ トレーニングログ</h1>
+
+<div class="card">
+  <form id="log-form">
+
+    <!-- 日付 -->
+    <p class="section-title">基本情報</p>
+    <div class="field">
+      <label for="date">日付<span class="req">*</span></label>
+      <input type="date" id="date" name="date" required />
+    </div>
+
+    <!-- 種目リスト -->
+    <p class="section-title">種目</p>
+
+    <table class="exercise-table">
+      <thead>
+        <tr>
+          <th>種目名</th>
+          <th>重量(kg)</th>
+          <th>レップ</th>
+          <th>セット</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="exercise-rows">
+        <!-- JS で行を追加 -->
+      </tbody>
+    </table>
+
+    <button type="button" class="btn-add" id="btn-add">
+      ＋ 種目を追加
+    </button>
+
+    <!-- メモ -->
+    <p class="section-title" style="margin-top:20px;">メモ</p>
+    <div class="field">
+      <textarea id="memo" name="memo" placeholder="フォームの感覚、気になった点など"></textarea>
+    </div>
+
+    <button type="submit" class="btn-submit">記録する</button>
+    <p id="status-msg"></p>
+
+  </form>
+</div>
+
+<script>
+  const MAX_ROWS = 15;
+  const tbody = document.getElementById('exercise-rows');
+  const btnAdd = document.getElementById('btn-add');
+
+  function createRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="ex-input" type="text" placeholder="スクワット" /></td>
+      <td class="num-cell"><input class="ex-input" type="number" min="0" step="0.5" placeholder="60" /></td>
+      <td class="num-cell"><input class="ex-input" type="number" min="1" step="1" placeholder="5" /></td>
+      <td class="num-cell"><input class="ex-input" type="number" min="1" step="1" placeholder="3" /></td>
+      <td class="del-cell"><button type="button" class="btn-del" title="削除">✕</button></td>
+    `;
+    tr.querySelector('.btn-del').addEventListener('click', () => {
+      tr.remove();
+      updateAddButton();
+    });
+    return tr;
+  }
+
+  function addRow() {
+    if (tbody.children.length >= MAX_ROWS) return;
+    const row = createRow();
+    tbody.appendChild(row);
+    row.querySelector('input').focus();
+    updateAddButton();
+  }
+
+  function updateAddButton() {
+    const count = tbody.children.length;
+    btnAdd.disabled = count >= MAX_ROWS;
+    btnAdd.textContent = count >= MAX_ROWS
+      ? `種目は最大 ${MAX_ROWS} 個まで`
+      : '＋ 種目を追加';
+  }
+
+  btnAdd.addEventListener('click', addRow);
+
+  // 初期 3 行
+  addRow(); addRow(); addRow();
+
+  // 今日の日付をセット
+  document.getElementById('date').valueAsDate = new Date();
+
+  // ---- 送信 ----
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyIqZxaDVpdDpueRaOeH8qaJwOR5dLhSfHxHNyopo4aglqrn_ocJYsznbNzv7rrpbnBsQ/exec';
+  const form = document.getElementById('log-form');
+  const statusMsg = document.getElementById('status-msg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const rows = [...tbody.querySelectorAll('tr')];
+    const exercises = rows
+      .map(tr => {
+        const inputs = tr.querySelectorAll('input');
+        return {
+          exercise: inputs[0].value.trim(),
+          weight:   inputs[1].value,
+          reps:     inputs[2].value,
+          sets:     inputs[3].value,
+        };
+      })
+      .filter(r => r.exercise); // 種目名が空の行は除外
+
+    if (exercises.length === 0) {
+      showStatus('⚠️ 種目を1つ以上入力してください', 'error');
+      return;
+    }
+
+    const data = {
+      date:      document.getElementById('date').value,
+      memo:      document.getElementById('memo').value,
+      exercises,
+    };
+
+    if (GAS_URL === 'YOUR_GAS_ENDPOINT_URL') {
+      console.log('送信データ（テスト）:', data);
+      showStatus('⚠️ GAS URL が未設定です（コンソールに出力しました）', 'error');
+      return;
+    }
+
+    showStatus('送信中…', 'sending');
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      showStatus('✅ 記録しました！', 'success');
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      showStatus('❌ 送信に失敗しました。再試行してください。', 'error');
+    }
+  });
+
+  function showStatus(msg, type) {
+    statusMsg.textContent = msg;
+    statusMsg.className = type;
+  }
+
+  function resetForm() {
+    [...tbody.querySelectorAll('tr')].forEach(tr => tr.remove());
+    addRow(); addRow(); addRow();
+    document.getElementById('memo').value = '';
+    document.getElementById('date').valueAsDate = new Date();
+  }
+</script>
+
+</body>
+</html>
